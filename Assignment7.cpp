@@ -9,238 +9,277 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <iomanip>
+#include <sstream>
+#include <limits>
 using namespace std;
 
-class Student {
-public:
+struct Student
+{
     int rollNo;
     string name;
-    float cgpa;
-
-    void getData() {
-        cout << "\nEnter Roll Number: ";
-        cin >> rollNo;
-        cin.ignore();
-        cout << "Enter Name: ";
-        getline(cin, name);
-        cout << "Enter CGPA: ";
-        cin >> cgpa;
-    }
-
-    void displayData() const {
-        cout << left << setw(10) << rollNo
-             << setw(25) << name
-             << setw(10) << cgpa << endl;
-    }
+    string division;
+    string address;
+    string dob;
+    float percentage;
+    char grade;
 };
 
-// Function to create file with initial data
-void createFile() {
-    ofstream fout("StudentData.txt", ios::out);
-    if (!fout) {
+class StudentDatabase
+{
+public:
+    Student record;
+    fstream file;
+
+    void create();
+    void add();
+    void display();
+    void search();
+    void modify();
+    void deleteRecord();
+};
+
+void StudentDatabase::create()
+{
+    file.open("StudentData.txt", ios::out);
+    if (!file)
+    {
         cout << "Error creating file!" << endl;
         return;
     }
-
     int n;
-    cout << "Enter number of student records to add: ";
+    cout << "Enter number of records to add: ";
     cin >> n;
     cin.ignore();
 
-    Student s;
-    for (int i = 0; i < n; i++) {
-        cout << "\nEnter details of student " << i + 1 << ":" << endl;
-        s.getData();
-        fout << s.rollNo << "|" << s.name << "|" << s.cgpa << "\n";
-    }
+    for (int i = 0; i < n; i++)
+    {
+        cout << "\nEnter details for student " << i + 1 << ":\n";
+        cout << "Roll No: ";
+        cin >> record.rollNo;
+        cin.ignore();
+        cout << "Name: ";
+        getline(cin, record.name);
+        cout << "Division: ";
+        getline(cin, record.division);
+        cout << "Address: ";
+        getline(cin, record.address);
+        cout << "Date of Birth (dd/mm/yyyy): ";
+        getline(cin, record.dob);
+        cout << "Percentage: ";
+        cin >> record.percentage;
+        cout << "Grade: ";
+        cin >> record.grade;
 
-    fout.close();
-    cout << "\nFile created and records saved successfully!\n";
+        file << record.rollNo << " " << record.name << " " << record.division << " "
+             << record.address << " " << record.dob << " " << record.percentage << " "
+             << record.grade << endl;
+    }
+    file.close();
+    cout << "\nFile created and records added successfully.\n";
 }
 
-// Function to display all records
-void displayFile() {
-    ifstream fin("StudentData.txt", ios::in);
-    if (!fin) {
-        cout << "File not found!" << endl;
+void StudentDatabase::display()
+{
+    file.open("StudentData.txt", ios::in);
+    if (!file)
+    {
+        cout << "File not found!\n";
         return;
     }
 
     cout << "\n---- Student Records ----\n";
-    cout << left << setw(10) << "RollNo"
-         << setw(25) << "Name"
-         << setw(10) << "CGPA" << endl;
+    cout << "RollNo\tName\tDivision\tAddress\tDOB\tPercentage\tGrade\n";
 
-    Student s;
-    string line;
-    while (getline(fin, line)) {
-        if (line.empty()) continue;
-        size_t pos1 = line.find('|');
-        size_t pos2 = line.find('|', pos1 + 1);
-        s.rollNo = stoi(line.substr(0, pos1));
-        s.name = line.substr(pos1 + 1, pos2 - pos1 - 1);
-        s.cgpa = stof(line.substr(pos2 + 1));
-        s.displayData();
+    while (file >> record.rollNo >> record.name >> record.division >> record.address >>
+           record.dob >> record.percentage >> record.grade)
+    {
+        cout << record.rollNo << "\t" << record.name << "\t" << record.division << "\t\t"
+             << record.address << "\t" << record.dob << "\t" << record.percentage << "\t\t"
+             << record.grade << endl;
     }
 
-    fin.close();
+    file.close();
 }
 
-// Function to add a new record
-void addRecord() {
-    ofstream fout("StudentData.txt", ios::app);
-    if (!fout) {
-        cout << "Error opening file!" << endl;
+void StudentDatabase::add()
+{
+    file.open("StudentData.txt", ios::app);
+    if (!file)
+    {
+        cout << "File not found!\n";
         return;
     }
 
-    Student s;
+    cin.ignore();
     cout << "\nEnter details of new student:\n";
-    s.getData();
-    fout << s.rollNo << "|" << s.name << "|" << s.cgpa << "\n";
-    fout.close();
+    cout << "Roll No: ";
+    cin >> record.rollNo;
+    cin.ignore();
+    cout << "Name: ";
+    getline(cin, record.name);
+    cout << "Division: ";
+    getline(cin, record.division);
+    cout << "Address: ";
+    getline(cin, record.address);
+    cout << "Date of Birth (dd/mm/yyyy): ";
+    getline(cin, record.dob);
+    cout << "Percentage: ";
+    cin >> record.percentage;
+    cout << "Grade: ";
+    cin >> record.grade;
 
-    cout << "\nRecord added successfully!\n";
+    file << record.rollNo << " " << record.name << " " << record.division << " "
+         << record.address << " " << record.dob << " " << record.percentage << " "
+         << record.grade << endl;
+
+    file.close();
+    cout << "New record added successfully.\n";
 }
 
-// Function to search for a record by roll number
-void searchRecord() {
-    ifstream fin("StudentData.txt", ios::in);
-    if (!fin) {
-        cout << "File not found!" << endl;
+void StudentDatabase::search()
+{
+    int roll;
+    bool found = false;
+    cout << "Enter Roll Number to search: ";
+    cin >> roll;
+
+    file.open("StudentData.txt", ios::in);
+    if (!file)
+    {
+        cout << "File not found!\n";
         return;
     }
 
-    int key;
-    cout << "\nEnter Roll Number to search: ";
-    cin >> key;
-
-    bool found = false;
-    string line;
-    Student s;
-    while (getline(fin, line)) {
-        if (line.empty()) continue;
-        size_t pos1 = line.find('|');
-        size_t pos2 = line.find('|', pos1 + 1);
-        s.rollNo = stoi(line.substr(0, pos1));
-        s.name = line.substr(pos1 + 1, pos2 - pos1 - 1);
-        s.cgpa = stof(line.substr(pos2 + 1));
-
-        if (s.rollNo == key) {
+    while (file >> record.rollNo >> record.name >> record.division >> record.address >>
+           record.dob >> record.percentage >> record.grade)
+    {
+        if (record.rollNo == roll)
+        {
             cout << "\nRecord Found:\n";
-            cout << left << setw(10) << "RollNo"
-                 << setw(25) << "Name"
-                 << setw(10) << "CGPA" << endl;
-            s.displayData();
+            cout << "Roll No: " << record.rollNo
+                 << "\nName: " << record.name
+                 << "\nDivision: " << record.division
+                 << "\nAddress: " << record.address
+                 << "\nDOB: " << record.dob
+                 << "\nPercentage: " << record.percentage
+                 << "\nGrade: " << record.grade << endl;
             found = true;
             break;
         }
     }
 
     if (!found)
-        cout << "\nRecord not found!\n";
+        cout << "Record not found!\n";
 
-    fin.close();
+    file.close();
 }
 
-// Function to modify a record
-void modifyRecord() {
-    ifstream fin("StudentData.txt");
-    ofstream fout("Temp.txt");
-    if (!fin || !fout) {
-        cout << "Error opening file!" << endl;
+void StudentDatabase::modify()
+{
+    int roll;
+    cout << "Enter Roll Number to modify: ";
+    cin >> roll;
+
+    file.open("StudentData.txt", ios::in);
+    ofstream temp("Temp.txt");
+
+    if (!file || !temp)
+    {
+        cout << "File error!\n";
         return;
     }
 
-    int key;
-    cout << "\nEnter Roll Number to modify: ";
-    cin >> key;
-
     bool found = false;
-    Student s;
-    string line;
-    while (getline(fin, line)) {
-        if (line.empty()) continue;
-        size_t pos1 = line.find('|');
-        size_t pos2 = line.find('|', pos1 + 1);
-        s.rollNo = stoi(line.substr(0, pos1));
-        s.name = line.substr(pos1 + 1, pos2 - pos1 - 1);
-        s.cgpa = stof(line.substr(pos2 + 1));
-
-        if (s.rollNo == key) {
-            cout << "\nCurrent record:\n";
-            s.displayData();
+    while (file >> record.rollNo >> record.name >> record.division >> record.address >>
+           record.dob >> record.percentage >> record.grade)
+    {
+        if (record.rollNo == roll)
+        {
             cout << "\nEnter new details:\n";
-            s.getData();
+            cout << "Name: ";
+            cin.ignore();
+            getline(cin, record.name);
+            cout << "Division: ";
+            getline(cin, record.division);
+            cout << "Address: ";
+            getline(cin, record.address);
+            cout << "Date of Birth: ";
+            getline(cin, record.dob);
+            cout << "Percentage: ";
+            cin >> record.percentage;
+            cout << "Grade: ";
+            cin >> record.grade;
             found = true;
         }
-        fout << s.rollNo << "|" << s.name << "|" << s.cgpa << "\n";
+        temp << record.rollNo << " " << record.name << " " << record.division << " "
+             << record.address << " " << record.dob << " " << record.percentage << " "
+             << record.grade << endl;
     }
 
-    fin.close();
-    fout.close();
+    file.close();
+    temp.close();
 
     remove("StudentData.txt");
     rename("Temp.txt", "StudentData.txt");
 
     if (found)
-        cout << "\nRecord modified successfully!\n";
+        cout << "Record modified successfully.\n";
     else
-        cout << "\nRecord not found!\n";
+        cout << "Record not found.\n";
 }
 
-// Function to delete a record
-void deleteRecord() {
-    ifstream fin("StudentData.txt");
-    ofstream fout("Temp.txt");
-    if (!fin || !fout) {
-        cout << "Error opening file!" << endl;
+void StudentDatabase::deleteRecord()
+{
+    int roll;
+    cout << "Enter Roll Number to delete: ";
+    cin >> roll;
+
+    file.open("StudentData.txt", ios::in);
+    ofstream temp("Temp.txt");
+
+    if (!file || !temp)
+    {
+        cout << "File error!\n";
         return;
     }
 
-    int key;
-    cout << "\nEnter Roll Number to delete: ";
-    cin >> key;
-
     bool found = false;
-    Student s;
-    string line;
-    while (getline(fin, line)) {
-        if (line.empty()) continue;
-        size_t pos1 = line.find('|');
-        size_t pos2 = line.find('|', pos1 + 1);
-        s.rollNo = stoi(line.substr(0, pos1));
-        s.name = line.substr(pos1 + 1, pos2 - pos1 - 1);
-        s.cgpa = stof(line.substr(pos2 + 1));
-
-        if (s.rollNo == key) {
+    while (file >> record.rollNo >> record.name >> record.division >> record.address >>
+           record.dob >> record.percentage >> record.grade)
+    {
+        if (record.rollNo == roll)
+        {
             found = true;
-            continue; // Skip writing this record
+            continue;
         }
-        fout << s.rollNo << "|" << s.name << "|" << s.cgpa << "\n";
+        temp << record.rollNo << " " << record.name << " " << record.division << " "
+             << record.address << " " << record.dob << " " << record.percentage << " "
+             << record.grade << endl;
     }
 
-    fin.close();
-    fout.close();
+    file.close();
+    temp.close();
 
     remove("StudentData.txt");
     rename("Temp.txt", "StudentData.txt");
 
     if (found)
-        cout << "\nRecord deleted successfully!\n";
+        cout << "Record deleted successfully.\n";
     else
-        cout << "\nRecord not found!\n";
+        cout << "Record not found.\n";
 }
 
-// Main Menu
-int main() {
+int main()
+{
+    StudentDatabase db;
     int choice;
-    do {
-        cout << "\nStudent File Handling\n";
+
+    do
+    {
+        cout << "\n===== STUDENT DATABASE MENU =====\n";
         cout << "1. Create File\n";
         cout << "2. Display All Records\n";
-        cout << "3. Add Record\n";
+        cout << "3. Add New Record\n";
         cout << "4. Search Record\n";
         cout << "5. Modify Record\n";
         cout << "6. Delete Record\n";
@@ -248,15 +287,31 @@ int main() {
         cout << "Enter your choice: ";
         cin >> choice;
 
-        switch (choice) {
-            case 1: createFile(); break;
-            case 2: displayFile(); break;
-            case 3: addRecord(); break;
-            case 4: searchRecord(); break;
-            case 5: modifyRecord(); break;
-            case 6: deleteRecord(); break;
-            case 7: cout << "Exiting...\n"; break;
-            default: cout << "Invalid choice! Try again.\n";
+        switch (choice)
+        {
+        case 1:
+            db.create();
+            break;
+        case 2:
+            db.display();
+            break;
+        case 3:
+            db.add();
+            break;
+        case 4:
+            db.search();
+            break;
+        case 5:
+            db.modify();
+            break;
+        case 6:
+            db.deleteRecord();
+            break;
+        case 7:
+            cout << "Exiting program...\n";
+            break;
+        default:
+            cout << "Invalid choice! Try again.\n";
         }
     } while (choice != 7);
 
@@ -266,41 +321,41 @@ int main() {
 
 /*
 OUTPUT:
-Student File Handling
+===== STUDENT DATABASE MENU =====
 1. Create File
 2. Display All Records
-3. Add Record
+3. Add New Record
 4. Search Record
 5. Modify Record
 6. Delete Record
 7. Exit
 Enter your choice: 1
-Enter number of student records to add: 3
+Enter number of records to add: 2
 
-Enter details of student 1:
+Enter details for student 1:
+Roll No: 23326
+Name: Prashant
+Division: 11
+Address: Nanded
+Date of Birth (dd/mm/yyyy): 04/07/2007
+Percentage: 98
+Grade: A
 
-Enter Roll Number: 23326
-Enter Name: Prashant
-Enter CGPA: 9.4
+Enter details for student 2:
+Roll No: 23324
+Name: Sanket
+Division: 11
+Address: Sambhaji nagar 
+Date of Birth (dd/mm/yyyy): 05/10/2005
+Percentage: 99
+Grade: A
 
-Enter details of student 2:
+File created and records added successfully.
 
-Enter Roll Number: 23342
-Enter Name: Sanket 
-Enter CGPA: 9.6
-
-Enter details of student 3:
-
-Enter Roll Number: 23342
-Enter Name: Om
-Enter CGPA: 10  
-
-File created and records saved successfully!
-
-Student File Handling
+===== STUDENT DATABASE MENU =====
 1. Create File
 2. Display All Records
-3. Add Record
+3. Add New Record
 4. Search Record
 5. Modify Record
 6. Delete Record
@@ -308,15 +363,14 @@ Student File Handling
 Enter your choice: 2
 
 ---- Student Records ----
-RollNo    Name                     CGPA
-23326     Prashant                 9.4
-23342     Sanket                   9.6
-23342     Om                       10
+RollNo  Name    Division        Address DOB     Percentage      Grade
+23326   Prashant        11              Nanded  04/07/2007      98              A
+23324   Sanket  11              Sambhaji        nagar   5               /
 
-Student File Handling
+===== STUDENT DATABASE MENU =====
 1. Create File
 2. Display All Records
-3. Add Record
+3. Add New Record
 4. Search Record
 5. Modify Record
 6. Delete Record
@@ -324,68 +378,48 @@ Student File Handling
 Enter your choice: 3
 
 Enter details of new student:
+Roll No: 23342
+Name: Om
+Division: 11
+Address: Nagpur
+Date of Birth (dd/mm/yyyy): 14/05/2006
+Percentage: 98
+Grade: A
+New record added successfully.
 
-Enter Roll Number: 23347
-Enter Name: Pruthviraj
-Enter CGPA: 9 
-
-Record added successfully!
-
-Student File Handling
+===== STUDENT DATABASE MENU =====
 1. Create File
 2. Display All Records
-3. Add Record
+3. Add New Record
 4. Search Record
 5. Modify Record
 6. Delete Record
 7. Exit
-Enter your choice: 4
+Enter your choice: 6
+Enter Roll Number to delete: 23326
+Record deleted successfully.
 
-Enter Roll Number to search: 23326 
-
-Record Found:
-RollNo    Name                     CGPA
-23326     Prashant                 9.4
-
-Student File Handling
+===== STUDENT DATABASE MENU =====
 1. Create File
 2. Display All Records
-3. Add Record
+3. Add New Record
 4. Search Record
 5. Modify Record
 6. Delete Record
 7. Exit
-Enter your choice: 5
+Enter your choice: 2
 
-Enter Roll Number to modify: 23342
+---- Student Records ----
+RollNo  Name    Division        Address DOB     Percentage      Grade
+23324   Sanket  11              Sambhaji        nagar   5               /
 
-Current record:
-23342     Sanket                   9.6
-
-Enter new details:
-
-Enter Roll Number: 6
-Enter Name: 
-Enter CGPA: 9  
-
-Current record:
-23342     Om                       10
-
-Enter new details:
-
-Enter Roll Number: 23347
-Enter Name: P
-Enter CGPA: 9
-
-Record modified successfully!
-
-Student File Handling
+===== STUDENT DATABASE MENU =====
 1. Create File
 2. Display All Records
-3. Add Record
+3. Add New Record
 4. Search Record
 5. Modify Record
 6. Delete Record
 7. Exit
 Enter your choice: 7
-Exiting...*/
+Exiting program...*/
