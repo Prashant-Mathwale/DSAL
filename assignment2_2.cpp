@@ -1,6 +1,7 @@
 //Problem statement:
-//Undo/Redo Functionality (Stack): Implementing an undo/redo feature in text editors or
-//design software using a last-in, first-out (LIFO) approach.
+// Task Scheduling System (Queue): Managing tasks in a first-in, first-out (FIFO) order, such 
+// as print job scheduling or process management in an operating system. 
+
 
 #include<iostream>
 #include<string>
